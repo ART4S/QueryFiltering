@@ -7,7 +7,7 @@ using System.Reflection.Emit;
 
 namespace QueryFiltering.Infrastructure
 {
-    public static class DynamicTypeBuilder
+    internal static class DynamicTypeBuilder
     {
         private static readonly ConcurrentDictionary<string, Type> DynamicTypes = new ConcurrentDictionary<string, Type>();
 
@@ -23,11 +23,11 @@ namespace QueryFiltering.Infrastructure
             }
 
             return DynamicTypes.GetOrAdd(
-                GetKey(fields), 
-                key =>
+                GetTypeName(fields), 
+                typeName =>
                 {
                     var typeBuilder = ModelBuilder.DefineType(
-                        key,
+                        typeName,
                         TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Serializable);
 
                     foreach (var field in fields)
@@ -39,7 +39,7 @@ namespace QueryFiltering.Infrastructure
                 });
         }
 
-        private static string GetKey(IDictionary<string, Type> properties)
+        private static string GetTypeName(IDictionary<string, Type> properties)
         {
             return $"[{string.Join(", ", properties.OrderBy(x => x.Value).ThenBy(x => x.Key).Select(x => $"{x.Key}: {x.Value}"))}]";
         }

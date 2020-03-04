@@ -28,7 +28,7 @@ namespace QueryFiltering.Infrastructure
 
         public static MethodInfo Skip => Methods.GetOrAdd("Skip",
             n => typeof(Queryable).GetMethods().First(x => x.Name == n && x.GetParameters().Length == 2));
-
+        
         public static MethodInfo Take => Methods.GetOrAdd("Take",
             n => typeof(Queryable).GetMethods().First(x => x.Name == n && x.GetParameters().Length == 2));
 

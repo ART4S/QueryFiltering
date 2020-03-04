@@ -42,7 +42,7 @@ namespace QueryFiltering.Visitors
                     default:
                         throw new ParseRuleException(
                             nameof(FilterExpressionVisitor), 
-                            $"неизвестный тип предиката '{aggregateNode.Symbol.Type}'");
+                            $"Unknown predicate type: '{aggregateNode.Symbol.Type}'");
                 }
             }
 
@@ -99,7 +99,7 @@ namespace QueryFiltering.Visitors
                 default:
                     throw new ParseRuleException(
                         nameof(FilterExpressionVisitor),
-                        $"неизвестный тип операции '{context.operation.Type}'");
+                        $"Unknown operation type: '{context.operation.Type}'");
             }
         }
 
@@ -135,7 +135,7 @@ namespace QueryFiltering.Visitors
                 default:
                     throw new ParseRuleException(
                         nameof(FilterExpressionVisitor),
-                        $"неизвестный тип данных '{context.value.Type}'");
+                        $"Unknown data type: '{context.value.Type}'");
             }
         }
 
@@ -156,7 +156,7 @@ namespace QueryFiltering.Visitors
                 default:
                     throw new ParseRuleException(
                         nameof(FilterExpressionVisitor),
-                        $"неизвестный тип функции '{context.value.Type}'");
+                        $"Unknown function type: '{context.value.Type}'");
             }
         }
     }
