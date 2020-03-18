@@ -1,7 +1,7 @@
-﻿using QueryFiltering.Infrastructure;
-using QueryFiltering.Nodes.Base;
+﻿using QueryFiltering.Nodes.Base;
 using System.Linq;
 using System.Linq.Expressions;
+using QueryFiltering.Helpers;
 
 namespace QueryFiltering.Nodes.Functions
 {
@@ -14,8 +14,8 @@ namespace QueryFiltering.Nodes.Functions
         public override Expression CreateExpression()
         {
             return Expression.Call(
-                Parameters[0].CreateExpression(), 
-                ReflectionCache.ToUpper, 
+                Parameters[0].CreateExpression(),
+                ReflectionCache.ToUpper,
                 Parameters.Skip(1).Select(x => x.CreateExpression()));
         }
     }

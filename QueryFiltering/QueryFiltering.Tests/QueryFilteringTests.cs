@@ -1,11 +1,12 @@
 ﻿using QueryFiltering.Tests.Model;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
 namespace QueryFiltering.Tests
 {
-    public class QueryFilteringTests
+    public class QueryFiltersTests
     {
         [Fact]
         public void ApplyQuery_EmptyQuery_ReturnsSameQueryable()
@@ -150,19 +151,19 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.OrderBy(x => x.InnerObject.IntValue).ThenByDescending(x => x.DoubleValue);
-            var actual = testObjects.ApplyQuery("$orderBy=InnerObject.IntValue, DoubleValue desc");
+            var actual = testObjects.ApplyQuery("$orderBy=InnerObject/IntValue, DoubleValue desc");
 
             Assert.Equal(expected, actual);
         }
 
         #endregion
 
-        #region Filter
+        #region Where
 
         [Theory]
         [InlineData(int.MaxValue)]
         [InlineData(int.MinValue)]
-        public void Filter_IntValueEqualsValue_ReturnsFilteredOne(int value)
+        public void Where_IntValueEqualsValue_ReturnsFilteredOne(int value)
         {
             var testObjects = new[]
             {
@@ -171,7 +172,7 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.IntValue == value);
-            var actual = testObjects.ApplyQuery($"$filter=IntValue eq {value}");
+            var actual = testObjects.ApplyQuery($"$where=IntValue eq {value}");
 
             Assert.Equal(expected, actual);
         }
@@ -179,7 +180,7 @@ namespace QueryFiltering.Tests
         [Theory]
         [InlineData(long.MaxValue)]
         [InlineData(long.MinValue)]
-        public void Filter_LongValueEqualsValue_ReturnsFilteredOne(long value)
+        public void Where_LongValueEqualsValue_ReturnsFilteredOne(long value)
         {
             var testObjects = new[]
             {
@@ -188,7 +189,7 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.LongValue == value);
-            var actual = testObjects.ApplyQuery($"$filter=LongValue eq {value}l");
+            var actual = testObjects.ApplyQuery($"$where=LongValue eq {value}l");
 
             Assert.Equal(expected, actual);
         }
@@ -196,7 +197,7 @@ namespace QueryFiltering.Tests
         [Theory]
         [InlineData(1.00)]
         [InlineData(-1.00)]
-        public void Filter_DoubleValueEqualsValue_ReturnsFilteredOne(int value)
+        public void Where_DoubleValueEqualsValue_ReturnsFilteredOne(int value)
         {
             var testObjects = new[]
             {
@@ -205,7 +206,7 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.DoubleValue == value);
-            var actual = testObjects.ApplyQuery($"$filter=DoubleValue eq {value}d");
+            var actual = testObjects.ApplyQuery($"$where=DoubleValue eq {value}d");
 
             Assert.Equal(expected, actual);
         }
@@ -213,7 +214,7 @@ namespace QueryFiltering.Tests
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public void Filter_BoolValueEqualsValue_ReturnsFilteredOne(bool value)
+        public void Where_BoolValueEqualsValue_ReturnsFilteredOne(bool value)
         {
             var testObjects = new[]
             {
@@ -222,7 +223,7 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.BoolValue == value);
-            var actual = testObjects.ApplyQuery($"$filter=BoolValue eq {value.ToString().ToLower()}");
+            var actual = testObjects.ApplyQuery($"$where=BoolValue eq {value.ToString().ToLower()}");
 
             Assert.Equal(expected, actual);
         }
@@ -231,7 +232,7 @@ namespace QueryFiltering.Tests
         [Theory]
         [InlineData(1.00)]
         [InlineData(-1.00)]
-        public void Filter_DecimalValueEqualsValue_ReturnsFilteredOne(decimal value)
+        public void Where_DecimalValueEqualsValue_ReturnsFilteredOne(decimal value)
         {
             var testObjects = new[]
             {
@@ -240,7 +241,7 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.DecimalValue == value);
-            var actual = testObjects.ApplyQuery($"$filter=DecimalValue eq {value}m");
+            var actual = testObjects.ApplyQuery($"$where=DecimalValue eq {value}m");
 
             Assert.Equal(expected, actual);
         }
@@ -248,7 +249,7 @@ namespace QueryFiltering.Tests
         [Theory]
         [InlineData(1.00)]
         [InlineData(-1.00)]
-        public void Filter_FloatValueEqualsValue_ReturnsFilteredOne(float value)
+        public void Where_FloatValueEqualsValue_ReturnsFilteredOne(float value)
         {
             var testObjects = new[]
             {
@@ -257,7 +258,7 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.FloatValue == value);
-            var actual = testObjects.ApplyQuery($"$filter=FloatValue eq {value}m");
+            var actual = testObjects.ApplyQuery($"$where=FloatValue eq {value}m");
 
             Assert.Equal(expected, actual);
         }
@@ -265,7 +266,7 @@ namespace QueryFiltering.Tests
         [Theory]
         [InlineData("2ec37a3c-1529-4298-a1da-30472b68e6a5")]
         [InlineData("00000000-0000-0000-0000-000000000000")]
-        public void Filter_GuidValueEqualsValue_ReturnsFilteredOne(string value)
+        public void Where_GuidValueEqualsValue_ReturnsFilteredOne(string value)
         {
             var testGuid = Guid.Parse(value);
             var testObjects = new[]
@@ -275,7 +276,7 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.GuidValue == testGuid);
-            var actual = testObjects.ApplyQuery($"$filter=GuidValue eq {testGuid}");
+            var actual = testObjects.ApplyQuery($"$where=GuidValue eq {testGuid}");
 
             Assert.Equal(expected, actual);
         }
@@ -283,7 +284,7 @@ namespace QueryFiltering.Tests
         [Theory]
         [InlineData("2000-01-01")]
         [InlineData("2000-01-01T12:59")]
-        public void Filter_DateTimeValueEqualsValue_ReturnsFilteredOne(string value)
+        public void Where_DateTimeValueEqualsValue_ReturnsFilteredOne(string value)
         {
             var testDateTime = DateTime.Parse(value);
             var testObjects = new[]
@@ -293,7 +294,7 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.DateTimeValue == testDateTime);
-            var actual = testObjects.ApplyQuery($"$filter=DateTimeValue eq datetime'{value}'");
+            var actual = testObjects.ApplyQuery($"$where=DateTimeValue eq datetime'{value}'");
 
             Assert.Equal(expected, actual);
         }
@@ -301,7 +302,7 @@ namespace QueryFiltering.Tests
         [Theory]
         [InlineData("notEmptyString")]
         [InlineData("")]
-        public void Filter_StringValueEqualsValue_ReturnsFilteredOne(string value)
+        public void Where_StringValueEqualsValue_ReturnsFilteredOne(string value)
         {
             var testObjects = new[]
             {
@@ -310,13 +311,13 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.StringValue == value);
-            var actual = testObjects.ApplyQuery($"$filter=StringValue eq '{value}'");
+            var actual = testObjects.ApplyQuery($"$where=StringValue eq '{value}'");
 
             Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void Filter_StringValueEqualsNull_ReturnsFilteredOne()
+        public void Where_StringValueEqualsNull_ReturnsFilteredOne()
         {
             var testObjects = new[]
             {
@@ -325,7 +326,7 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.StringValue == null);
-            var actual = testObjects.ApplyQuery("$filter=StringValue eq null");
+            var actual = testObjects.ApplyQuery("$where=StringValue eq null");
 
             Assert.Equal(expected, actual);
         }
@@ -333,7 +334,7 @@ namespace QueryFiltering.Tests
         [Theory]
         [InlineData(1)]
         [InlineData(-1)]
-        public void Filter_NullableIntValueEqualsValue_ReturnsFilteredOne(int? value)
+        public void Where_NullableIntValueEqualsValue_ReturnsFilteredOne(int? value)
         {
             var testObjects = new[]
             {
@@ -342,13 +343,13 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.NullableIntValue == value);
-            var actual = testObjects.ApplyQuery($"$filter=NullableIntValue eq {value}");
+            var actual = testObjects.ApplyQuery($"$where=NullableIntValue eq {value}");
 
             Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void Filter_NullableIntValueEqualsNull_ReturnsFilteredOne()
+        public void Where_NullableIntValueEqualsNull_ReturnsFilteredOne()
         {
             var testObjects = new[]
             {
@@ -357,13 +358,13 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.NullableIntValue == null);
-            var actual = testObjects.ApplyQuery("$filter=NullableIntValue eq null");
+            var actual = testObjects.ApplyQuery("$where=NullableIntValue eq null");
 
             Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void Filter_StringValueStartsWithSomeValue_ReturnsFilteredOne()
+        public void Where_StringValueStartsWithSomeValue_ReturnsFilteredOne()
         {
             var testObjects = new[]
             {
@@ -372,13 +373,13 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.StringValue.StartsWith("match"));
-            var actual = testObjects.ApplyQuery("$filter=startswith(StringValue, 'match') eq true");
+            var actual = testObjects.ApplyQuery("$where=startswith(StringValue, 'match') eq true");
 
             Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void Filter_StringValueEndsWithSomeValue_ReturnsFilteredOne()
+        public void Where_StringValueEndsWithSomeValue_ReturnsFilteredOne()
         {
             var testObjects = new[]
             {
@@ -387,13 +388,13 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.StringValue.EndsWith("match"));
-            var actual = testObjects.ApplyQuery("$filter=endswith(StringValue, 'match') eq true");
+            var actual = testObjects.ApplyQuery("$where=endswith(StringValue, 'match') eq true");
 
             Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void Filter_ToUpperStringValueEqualsSomeValue_ReturnsFilteredOne()
+        public void Where_ToUpperStringValueEqualsSomeValue_ReturnsFilteredOne()
         {
             var testObjects = new[]
             {
@@ -402,13 +403,13 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.StringValue.ToUpper() == "MATCH");
-            var actual = testObjects.ApplyQuery("$filter=toupper(StringValue) eq 'MATCH'");
+            var actual = testObjects.ApplyQuery("$where=toupper(StringValue) eq 'MATCH'");
 
             Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void Filter_ToLowerStringValueEqualsSomeValue_ReturnsFilteredOne()
+        public void Where_ToLowerStringValueEqualsSomeValue_ReturnsFilteredOne()
         {
             var testObjects = new[]
             {
@@ -417,13 +418,13 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.StringValue.ToLower() == "match");
-            var actual = testObjects.ApplyQuery("$filter=tolower(StringValue) eq 'match'");
+            var actual = testObjects.ApplyQuery("$where=tolower(StringValue) eq 'match'");
 
             Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void Filter_StringValueNotEqualsSomeString_ReturnsFilteredOne()
+        public void Where_StringValueNotEqualsSomeString_ReturnsFilteredOne()
         {
             var testObjects = new[]
             {
@@ -432,13 +433,13 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => !(x.StringValue == "notMatch"));
-            var actual = testObjects.ApplyQuery("$filter=not StringValue eq 'notMatch'");
+            var actual = testObjects.ApplyQuery("$where=not StringValue eq 'notMatch'");
 
             Assert.Equal(expected, actual);
         }
 
         [Fact]
-        public void Filter_InnerObjectIntValueEqualsValue_ReturnsFilteredOne()
+        public void Where_InnerObjectIntValueEqualsSomeValue_ReturnsFilteredOne()
         {
             var testObjects = new[]
             {
@@ -447,7 +448,32 @@ namespace QueryFiltering.Tests
             }.AsQueryable();
 
             var expected = testObjects.Where(x => x.InnerObject != null && x.InnerObject.IntValue == 1);
-            var actual = testObjects.ApplyQuery("$filter=InnerObject ne null and InnerObject.IntValue eq 1");
+            var actual = testObjects.ApplyQuery("$where=InnerObject ne null and InnerObject/IntValue eq 1");
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void Where_InnerObjectHaveIntValueOrOtherInnerObjectStringValueStartsWithValue_ReturnsFiltered()
+        {
+            var testObjects = new[]
+            {
+                new TestObject(){InnerObject = new InnerObject(){IntValue = 1}},
+                new TestObject(){InnerObject = new InnerObject(){OtherInnerObject = new InnerObject(){StringValue = "testString"}}},
+                new TestObject()
+            }.AsQueryable();
+
+            var expected = testObjects.Where(
+                x => x.InnerObject != null &&
+                     (x.InnerObject.IntValue == 1 ||
+                      x.InnerObject.OtherInnerObject != null &&
+                      x.InnerObject.OtherInnerObject.StringValue.StartsWith("test")));
+
+            var actual = testObjects.ApplyQuery(
+                "$where=InnerObject ne null and " +
+                "(InnerObject/IntValue eq 1 or " +
+                "(InnerObject/OtherInnerObject ne null and " +
+                "startswith(InnerObject/OtherInnerObject/StringValue, 'test') eq true))");
 
             Assert.Equal(expected, actual);
         }
@@ -457,18 +483,28 @@ namespace QueryFiltering.Tests
         #region Select
 
         [Fact]
-        public void Select_OneProperty_ReturnsOneWithOneProperty()
+        public void Select_OnePropertyFromElement_ReturnsDictionaryCollectionWithOneElementWithOneProperty()
         {
-            IQueryable testObjects = new[]
+            var testObjects = new[]
             {
-                new TestObject(){IntValue = 1, DoubleValue = 1},
-            }.AsQueryable();
+                new TestObject(){StringValue = "test", IntValue = 1},
+            };
 
-            var actual = (IQueryable) testObjects.ApplyQuery("$select=IntValue");
+            var actual = ((IQueryable)testObjects.AsQueryable())
+                .ApplyQuery("$select=StringValue")
+                .Cast<Dictionary<string, object>>()
+                .SelectMany(x => x)
+                .ToList();
 
-            Assert.True(actual.ElementType != typeof(TestObject));
-            Assert.True(actual.ElementType.GetFields().Length == 1);
-            Assert.True(actual.ElementType.GetFields().First().Name == "IntValue");
+            var expected = testObjects.Select(x =>
+                new Dictionary<string, object>()
+                {
+                    { nameof(x.StringValue), x.StringValue }
+                })
+                .SelectMany(x => x)
+                .ToList();
+
+            Assert.True(expected.SequenceEqual(actual));
         }
 
         #endregion

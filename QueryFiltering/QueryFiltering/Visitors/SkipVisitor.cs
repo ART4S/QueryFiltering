@@ -1,27 +1,30 @@
-﻿using QueryFiltering.Infrastructure;
+﻿using QueryFiltering.AntlrGenerated;
+using QueryFiltering.Helpers;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace QueryFiltering.Visitors
 {
-    internal class SkipVisitor : QueryFilteringBaseVisitor<object>
+    internal class SkipVisitor : QueryFilteringBaseVisitor<IQueryable>
     {
-        private readonly object _sourceQueryable;
+        private readonly IQueryable _sourceQueryable;
         private readonly ParameterExpression _parameter;
 
-        public SkipVisitor(object sourceQueryable, ParameterExpression parameter)
+        public SkipVisitor(IQueryable sourceQueryable, ParameterExpression parameter)
         {
             _sourceQueryable = sourceQueryable;
             _parameter = parameter;
         }
 
-        public override object VisitSkip(QueryFilteringParser.SkipContext context)
+        public override IQueryable VisitSkip(QueryFilteringParser.SkipContext context)
         {
-            var skip = ReflectionCache.Skip
+            MethodInfo skip = ReflectionCache.Skip
                 .MakeGenericMethod(_parameter.Type);
 
-            var count = int.Parse(context.count.Text);
+            int count = int.Parse(context.count.Text);
 
-            return skip.Invoke(null, new[] { _sourceQueryable, count });
+            return (IQueryable)skip.Invoke(null, new object[] { _sourceQueryable, count });
         }
     }
 }

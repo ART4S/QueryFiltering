@@ -1,4 +1,5 @@
 using Antlr4.Runtime.Tree;
+using QueryFiltering.AntlrGenerated;
 using QueryFiltering.Exceptions;
 using QueryFiltering.Nodes;
 using QueryFiltering.Nodes.Aggregates;
@@ -11,23 +12,23 @@ using System.Linq.Expressions;
 
 namespace QueryFiltering.Visitors
 {
-    internal class FilterExpressionVisitor : QueryFilteringBaseVisitor<BaseNode>
+    internal class WhereExpressionVisitor : QueryFilteringBaseVisitor<BaseNode>
     {
         private readonly ParameterExpression _parameter;
 
-        public FilterExpressionVisitor(ParameterExpression parameter)
+        public WhereExpressionVisitor(ParameterExpression parameter)
         {
             _parameter = parameter;
         }
 
-        public override BaseNode VisitFilterExpression(QueryFilteringParser.FilterExpressionContext context)
+        public override BaseNode VisitWhereExpression(QueryFilteringParser.WhereExpressionContext context)
         {
             BaseNode resultNode = context.children[0].Accept(this);
 
             for (int i = 1; i < context.children.Count; i += 2)
             {
-                var left = resultNode;
-                var right = context.children[i + 1].Accept(this);
+                BaseNode left = resultNode;
+                BaseNode right = context.children[i + 1].Accept(this);
 
                 var aggregateNode = (ITerminalNode)context.children[i];
 
@@ -41,7 +42,7 @@ namespace QueryFiltering.Visitors
                         continue;
                     default:
                         throw new ParseRuleException(
-                            nameof(FilterExpressionVisitor), 
+                            nameof(WhereExpressionVisitor),
                             $"Unknown predicate type: '{aggregateNode.Symbol.Type}'");
                 }
             }
@@ -49,11 +50,11 @@ namespace QueryFiltering.Visitors
             return resultNode;
         }
 
-        public override BaseNode VisitFilterAtom(QueryFilteringParser.FilterAtomContext context)
+        public override BaseNode VisitWhereAtom(QueryFilteringParser.WhereAtomContext context)
         {
-            var resultNode = context.boolExpr?.Accept(this) ?? 
-                             context.filterExpr?.Accept(this) ?? 
-                             throw new ParseRuleException(nameof(FilterExpressionVisitor));
+            BaseNode resultNode = context.boolExpr?.Accept(this) ??
+                                  context.whereExpr?.Accept(this) ??
+                                  throw new ParseRuleException(nameof(WhereExpressionVisitor));
 
             if (context.not != null)
             {
@@ -65,22 +66,22 @@ namespace QueryFiltering.Visitors
 
         public override BaseNode VisitAtom(QueryFilteringParser.AtomContext context)
         {
-            foreach (var child in context.children)
+            foreach (IParseTree child in context.children)
             {
-                var node = child.Accept(this);
+                BaseNode node = child.Accept(this);
                 if (node != null)
                 {
                     return node;
                 }
             }
 
-            throw new ParseRuleException(nameof(FilterExpressionVisitor));
+            throw new ParseRuleException(nameof(WhereExpressionVisitor));
         }
 
         public override BaseNode VisitBoolExpression(QueryFilteringParser.BoolExpressionContext context)
         {
-            var left = context.left.Accept(this);
-            var right = context.right.Accept(this);
+            BaseNode left = context.left.Accept(this);
+            BaseNode right = context.right.Accept(this);
 
             switch (context.operation.Type)
             {
@@ -98,7 +99,7 @@ namespace QueryFiltering.Visitors
                     return new LessThanOrEqualNode(left, right);
                 default:
                     throw new ParseRuleException(
-                        nameof(FilterExpressionVisitor),
+                        nameof(WhereExpressionVisitor),
                         $"Unknown operation type: '{context.operation.Type}'");
             }
         }
@@ -134,14 +135,14 @@ namespace QueryFiltering.Visitors
                     return new DateTimeNode(context.value.Text);
                 default:
                     throw new ParseRuleException(
-                        nameof(FilterExpressionVisitor),
+                        nameof(WhereExpressionVisitor),
                         $"Unknown data type: '{context.value.Type}'");
             }
         }
 
         public override BaseNode VisitFunction(QueryFilteringParser.FunctionContext context)
         {
-            var parameters = context.atom().Select(x => x.Accept(this)).ToArray();
+            BaseNode[] parameters = context.atom().Select(x => x.Accept(this)).ToArray();
 
             switch (context.value.Type)
             {
@@ -155,7 +156,7 @@ namespace QueryFiltering.Visitors
                     return new EndsWithNode(parameters);
                 default:
                     throw new ParseRuleException(
-                        nameof(FilterExpressionVisitor),
+                        nameof(WhereExpressionVisitor),
                         $"Unknown function type: '{context.value.Type}'");
             }
         }

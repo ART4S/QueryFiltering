@@ -1,55 +1,62 @@
-﻿using QueryFiltering.Infrastructure;
+﻿using QueryFiltering.AntlrGenerated;
+using QueryFiltering.Helpers;
 using QueryFiltering.Nodes;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace QueryFiltering.Visitors
 {
-    internal class SelectVisitor : QueryFilteringBaseVisitor<object>
+    internal class SelectVisitor : QueryFilteringBaseVisitor<IQueryable>
     {
-        private readonly object _sourceQueryable;
+        private readonly IQueryable _sourceQueryable;
         private readonly ParameterExpression _parameter;
 
-        public SelectVisitor(object sourceQueryable, ParameterExpression parameter)
+        public SelectVisitor(IQueryable sourceQueryable, ParameterExpression parameter)
         {
             _sourceQueryable = sourceQueryable;
             _parameter = parameter;
         }
 
-        public override object VisitSelect(QueryFilteringParser.SelectContext context)
+        public override IQueryable VisitSelect(QueryFilteringParser.SelectContext context)
         {
             return context.expression.Accept(this);
         }
 
-        public override object VisitSelectExpression(QueryFilteringParser.SelectExpressionContext context)
+        public override IQueryable VisitSelectExpression(QueryFilteringParser.SelectExpressionContext context)
         {
             var properties = context.PROPERTYACCESS()
                 .Select(x => x.Symbol.Text)
                 .ToHashSet();
 
-            var typeProperties = _parameter.Type
+            Type dictType = typeof(Dictionary<string, object>);
+            MethodInfo addMethod = dictType.GetMethod("Add");
+
+            ElementInit[] elementInitProperties = _parameter.Type
                 .GetCashedProperties()
                 .Where(p => properties.Contains(p.Name))
-                .ToDictionary(p => p.Name, p => p.PropertyType);
+                .Select(p => Expression.ElementInit(
+                    addMethod,
+                    Expression.Constant(p.Name),
+                    Expression.Convert(
+                        new PropertyNode(p.Name, _parameter).CreateExpression(),
+                        typeof(object))))
+                .ToArray();
 
-            var dynamicType = DynamicTypeBuilder.CreateDynamicType(typeProperties);
+            ListInitExpression body = Expression.ListInit(
+                Expression.New(dictType), elementInitProperties);
 
-            var propExpressions = properties.ToDictionary(x => x, x => new PropertyNode(x, _parameter).CreateExpression());
+            MethodInfo lambda = ReflectionCache.Lambda.MakeGenericMethod(
+                typeof(Func<,>).MakeGenericType(_parameter.Type, dictType));
 
-            var body = Expression.MemberInit(
-                Expression.New(dynamicType.GetConstructors().Single()), 
-                dynamicType.GetFields().Select(f => Expression.Bind(f, propExpressions[f.Name])));
+            object expression = lambda.Invoke(null, new object[] { body, new ParameterExpression[] { _parameter } });
 
-            var lambda = ReflectionCache.Lambda.MakeGenericMethod(
-                typeof(Func<,>).MakeGenericType(_parameter.Type, dynamicType));
+            MethodInfo select = ReflectionCache.Select
+                .MakeGenericMethod(_parameter.Type, dictType);
 
-            var expression = lambda.Invoke(null, new object[] {body, new ParameterExpression[] {_parameter}});
-
-            var select = ReflectionCache.Select
-                .MakeGenericMethod(_parameter.Type, dynamicType);
-
-            return select.Invoke(null, new [] {_sourceQueryable, expression });
+            return (IQueryable)select.Invoke(null, new[] { _sourceQueryable, expression });
         }
     }
 }

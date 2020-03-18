@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace QueryFiltering.Infrastructure
+namespace QueryFiltering.Helpers
 {
     internal static class ReflectionCache
     {
@@ -28,7 +28,7 @@ namespace QueryFiltering.Infrastructure
 
         public static MethodInfo Skip => Methods.GetOrAdd("Skip",
             n => typeof(Queryable).GetMethods().First(x => x.Name == n && x.GetParameters().Length == 2));
-        
+
         public static MethodInfo Take => Methods.GetOrAdd("Take",
             n => typeof(Queryable).GetMethods().First(x => x.Name == n && x.GetParameters().Length == 2));
 
@@ -50,7 +50,7 @@ namespace QueryFiltering.Infrastructure
         public static MethodInfo EndsWith => Methods.GetOrAdd("EndsWith",
             n => typeof(string).GetMethods().First(x => x.Name == n && x.GetParameters()[0].ParameterType == typeof(string)));
 
-        public static PropertyInfo[] GetCashedProperties(this Type sourceType) 
+        public static PropertyInfo[] GetCashedProperties(this Type sourceType)
             => Properties.GetOrAdd(sourceType, t => t.GetProperties());
     }
 }

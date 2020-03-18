@@ -15,10 +15,11 @@ namespace QueryFiltering.Nodes
 
         public override Expression CreateExpression()
         {
-            return Value.Split(".").Aggregate<string, MemberExpression>(null, 
-                (current, propertyName) => current == null ? 
-                    Expression.Property(_parameter, propertyName) : 
-                    Expression.Property(current, propertyName));
+            return Value.Split("/").Aggregate<string, MemberExpression>(null,
+                (propertyChainExpression, propertyName) =>
+                    propertyChainExpression == null
+                        ? Expression.Property(_parameter, propertyName)
+                        : Expression.Property(propertyChainExpression, propertyName));
         }
     }
 }
