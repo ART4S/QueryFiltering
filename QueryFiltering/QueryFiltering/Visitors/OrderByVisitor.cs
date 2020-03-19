@@ -1,4 +1,5 @@
-﻿using QueryFiltering.AntlrGenerated;
+﻿using System;
+using QueryFiltering.AntlrGenerated;
 using QueryFiltering.Helpers;
 using QueryFiltering.Nodes;
 using System.Linq;
@@ -43,13 +44,15 @@ namespace QueryFiltering.Visitors
                 null,
                 new object[] { propertyExpression, new ParameterExpression[] { _parameter } });
 
+            Type[] args = { _parameter.Type, propertyExpression.Type };
+
             MethodInfo order = context.sortType == null || context.sortType.Type == QueryFilteringLexer.ASC
                     ? context.isFirstSort
-                        ? TypeCashe.Queryable.OrderBy(_parameter.Type, propertyExpression.Type)
-                        : TypeCashe.Queryable.ThenBy(_parameter.Type, propertyExpression.Type)
+                        ? TypeCashe.Queryable.OrderBy(args)
+                        : TypeCashe.Queryable.ThenBy(args)
                     : context.isFirstSort
-                        ? TypeCashe.Queryable.OrderByDescending(_parameter.Type, propertyExpression.Type)
-                        : TypeCashe.Queryable.ThenByDescending(_parameter.Type, propertyExpression.Type);
+                        ? TypeCashe.Queryable.OrderByDescending(args)
+                        : TypeCashe.Queryable.ThenByDescending(args);
 
             return (IQueryable)order.Invoke(null, new[] { _sourceQueryable, expression });
         }
