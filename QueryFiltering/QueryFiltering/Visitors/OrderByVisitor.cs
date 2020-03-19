@@ -1,7 +1,6 @@
 ﻿using QueryFiltering.AntlrGenerated;
 using QueryFiltering.Helpers;
 using QueryFiltering.Nodes;
-using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -38,21 +37,21 @@ namespace QueryFiltering.Visitors
         {
             Expression propertyExpression = new PropertyNode(context.propertyName.Text, _parameter).CreateExpression();
 
-            MethodInfo lambda = ReflectionCache.Lambda.MakeGenericMethod(
-                typeof(Func<,>).MakeGenericType(_parameter.Type, propertyExpression.Type));
+            MethodInfo lambda = TypeCashe.Expression.LambdaFunc(_parameter.Type, propertyExpression.Type);
 
-            object expression = lambda.Invoke(null, new object[] { propertyExpression, new ParameterExpression[] { _parameter } });
+            object expression = lambda.Invoke(
+                null,
+                new object[] { propertyExpression, new ParameterExpression[] { _parameter } });
 
-            MethodInfo orderBy = (context.sortType == null || context.sortType.Type == QueryFilteringLexer.ASC
+            MethodInfo order = context.sortType == null || context.sortType.Type == QueryFilteringLexer.ASC
                     ? context.isFirstSort
-                        ? ReflectionCache.OrderBy
-                        : ReflectionCache.ThenBy
+                        ? TypeCashe.Queryable.OrderBy(_parameter.Type, propertyExpression.Type)
+                        : TypeCashe.Queryable.ThenBy(_parameter.Type, propertyExpression.Type)
                     : context.isFirstSort
-                        ? ReflectionCache.OrderByDescending
-                        : ReflectionCache.ThenByDescending)
-                .MakeGenericMethod(_parameter.Type, propertyExpression.Type);
+                        ? TypeCashe.Queryable.OrderByDescending(_parameter.Type, propertyExpression.Type)
+                        : TypeCashe.Queryable.ThenByDescending(_parameter.Type, propertyExpression.Type);
 
-            return (IQueryable)orderBy.Invoke(null, new[] { _sourceQueryable, expression });
+            return (IQueryable)order.Invoke(null, new[] { _sourceQueryable, expression });
         }
     }
 }

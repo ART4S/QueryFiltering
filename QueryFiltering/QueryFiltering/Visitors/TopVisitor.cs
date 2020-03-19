@@ -19,8 +19,7 @@ namespace QueryFiltering.Visitors
 
         public override IQueryable VisitTop(QueryFilteringParser.TopContext context)
         {
-            MethodInfo take = ReflectionCache.Take
-                .MakeGenericMethod(_parameter.Type);
+            MethodInfo take = TypeCashe.Queryable.Take(_parameter.Type);
 
             int count = int.Parse(context.count.Text);
 

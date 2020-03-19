@@ -1,8 +1,8 @@
 ﻿using QueryFiltering.AntlrGenerated;
-using QueryFiltering.Helpers;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using QueryFiltering.Helpers;
 
 namespace QueryFiltering.Visitors
 {
@@ -19,8 +19,7 @@ namespace QueryFiltering.Visitors
 
         public override IQueryable VisitSkip(QueryFilteringParser.SkipContext context)
         {
-            MethodInfo skip = ReflectionCache.Skip
-                .MakeGenericMethod(_parameter.Type);
+            MethodInfo skip = TypeCashe.Queryable.Skip(_parameter.Type);
 
             int count = int.Parse(context.count.Text);
 

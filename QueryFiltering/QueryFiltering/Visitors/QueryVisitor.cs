@@ -12,7 +12,7 @@ namespace QueryFiltering.Visitors
         public QueryVisitor(IQueryable sourceQueryable)
         {
             _sourceQueryable = sourceQueryable;
-            _parameter = Expression.Parameter(sourceQueryable.ElementType);
+            _parameter = Expression.Parameter(sourceQueryable.ElementType, "x");
         }
 
         public override IQueryable VisitQuery(QueryFilteringParser.QueryContext context)

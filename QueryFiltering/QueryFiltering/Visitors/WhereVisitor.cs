@@ -1,7 +1,6 @@
 ﻿using QueryFiltering.AntlrGenerated;
 using QueryFiltering.Helpers;
 using QueryFiltering.Nodes.Base;
-using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -24,14 +23,13 @@ namespace QueryFiltering.Visitors
             var visitor = new WhereExpressionVisitor(_parameter);
             BaseNode whereExpressionNode = context.expression.Accept(visitor);
 
-            MethodInfo lambda = ReflectionCache.Lambda
-                .MakeGenericMethod(typeof(Func<,>)
-                    .MakeGenericType(_parameter.Type, typeof(bool)));
+            MethodInfo lambda = TypeCashe.Expression.LambdaFunc(_parameter.Type, typeof(bool));
 
-            object expression = lambda.Invoke(null, new object[] { whereExpressionNode.CreateExpression(), new ParameterExpression[] { _parameter } });
+            object expression = lambda.Invoke(
+                null,
+                new object[] { whereExpressionNode.CreateExpression(), new ParameterExpression[] { _parameter } });
 
-            MethodInfo where = ReflectionCache.Where
-                .MakeGenericMethod(_parameter.Type);
+            MethodInfo where = TypeCashe.Queryable.Where(_parameter.Type);
 
             return (IQueryable)where.Invoke(null, new object[] { _sourceQueryable, expression });
         }

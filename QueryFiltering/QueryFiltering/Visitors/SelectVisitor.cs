@@ -28,33 +28,34 @@ namespace QueryFiltering.Visitors
         public override IQueryable VisitSelectExpression(QueryFilteringParser.SelectExpressionContext context)
         {
             var properties = context.PROPERTYACCESS()
-                .Select(x => x.Symbol.Text)
+                .Select(x => x.Symbol.Text.ToLower())
                 .ToHashSet();
 
             Type dictType = typeof(Dictionary<string, object>);
             MethodInfo addMethod = dictType.GetMethod("Add");
 
             ElementInit[] elementInitProperties = _parameter.Type
-                .GetCashedProperties()
-                .Where(p => properties.Contains(p.Name))
+                .GetProperties()
+                .Select(prop => prop.Name)
+                .Where(propName => properties.Contains(propName.ToLower()))
                 .Select(p => Expression.ElementInit(
                     addMethod,
-                    Expression.Constant(p.Name),
+                    Expression.Constant(p),
                     Expression.Convert(
-                        new PropertyNode(p.Name, _parameter).CreateExpression(),
+                        new PropertyNode(p, _parameter).CreateExpression(),
                         typeof(object))))
                 .ToArray();
 
             ListInitExpression body = Expression.ListInit(
                 Expression.New(dictType), elementInitProperties);
 
-            MethodInfo lambda = ReflectionCache.Lambda.MakeGenericMethod(
-                typeof(Func<,>).MakeGenericType(_parameter.Type, dictType));
+            MethodInfo lambda = TypeCashe.Expression.LambdaFunc(_parameter.Type, dictType);
 
-            object expression = lambda.Invoke(null, new object[] { body, new ParameterExpression[] { _parameter } });
+            object expression = lambda.Invoke(
+                null,
+                new object[] { body, new ParameterExpression[] { _parameter } });
 
-            MethodInfo select = ReflectionCache.Select
-                .MakeGenericMethod(_parameter.Type, dictType);
+            MethodInfo select = TypeCashe.Queryable.Select(_parameter.Type, dictType);
 
             return (IQueryable)select.Invoke(null, new[] { _sourceQueryable, expression });
         }
