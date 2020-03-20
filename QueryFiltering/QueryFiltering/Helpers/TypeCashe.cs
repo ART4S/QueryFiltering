@@ -11,7 +11,7 @@ namespace QueryFiltering.Helpers
         private static readonly ConcurrentDictionary<string, MethodInfo> Storage = new ConcurrentDictionary<string, MethodInfo>();
 
         private static string GetStorageKey(Type[] arguments, [CallerMemberName] string callerMethod = null)
-            => $"{callerMethod}: {string.Join(", ", arguments.Select(x => x.Name).OrderBy(x => x))}";
+            => $"{callerMethod}: {string.Join(", ", arguments.Select(x => x.Name))}";
 
         public static class Expression
         {
