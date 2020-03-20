@@ -31,20 +31,19 @@ namespace QueryFiltering.Visitors
                 .Select(x => x.Symbol.Text.ToLower())
                 .ToHashSet();
 
-            Type dictType = typeof(Dictionary<string, object>);
-            MethodInfo addMethod = dictType.GetMethod("Add");
-
             ElementInit[] elementInitProperties = _parameter.Type
                 .GetProperties()
                 .Select(prop => prop.Name)
                 .Where(propName => properties.Contains(propName.ToLower()))
                 .Select(p => Expression.ElementInit(
-                    addMethod,
+                    TypeCashe.Dictionary<string, object>.Add(),
                     Expression.Constant(p),
                     Expression.Convert(
                         new PropertyNode(p, _parameter).CreateExpression(),
                         typeof(object))))
                 .ToArray();
+
+            Type dictType = typeof(Dictionary<string, object>);
 
             ListInitExpression body = Expression.ListInit(
                 Expression.New(dictType), elementInitProperties);

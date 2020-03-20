@@ -137,5 +137,17 @@ namespace QueryFiltering.Helpers
                 .GetMethods()
                 .First(x => x.Name == "ToUpper" && x.GetParameters().Length == 0);
         }
+
+        public static class Dictionary<TKey, TValue>
+        {
+            public static MethodInfo Add()
+            {
+                return Storage.GetOrAdd(GetStorageKey(new Type[] { }), _ =>
+                 {
+                     return typeof(System.Collections.Generic.Dictionary<TKey, TValue>)
+                         .GetMethod("Add");
+                 });
+            }
+        }
     }
 }
